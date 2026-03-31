@@ -3,11 +3,11 @@ import { View, Text } from 'react-native';
 import BaseLayout from '../../src/components/layout/BaseLayout';
 import { placeholderStyles as styles } from '../../src/styles/placeholderStyles';
 
-export default function CreateScreen() {
+export default function DashboardScreen() {
   return (
-    <BaseLayout title="Tạo phiếu hỗ trợ kỹ thuật">
+    <BaseLayout title="Bảng điều khiển">
       <View style={styles.placeholder}>
-        <Text style={styles.text}>Tạo phiếu hỗ trợ kỹ thuật</Text>
+        <Text style={styles.text}>Bảng điều khiển</Text>
         <Text style={styles.subText}>Nội dung sẽ được cập nhật sau</Text>
       </View>
     </BaseLayout>
