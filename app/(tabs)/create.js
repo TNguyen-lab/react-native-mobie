@@ -182,7 +182,7 @@ export default function CreateScreen() {
           <MaterialIcons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Tạo phiếu hỗ trợ kỹ thuật</Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
@@ -340,7 +340,7 @@ export default function CreateScreen() {
           )}
         </TouchableOpacity>
 
-        <View style={{ height: 32 }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* ── Asset Search Modal ── */}
@@ -355,7 +355,7 @@ export default function CreateScreen() {
               <MaterialIcons name="close" size={24} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Tìm kiếm tài sản</Text>
-            <View style={{ width: 24 }} />
+            <View style={styles.headerSpacer} />
           </View>
 
           <View style={styles.searchBar}>
@@ -860,5 +860,11 @@ const styles = StyleSheet.create({
   clearOptionText: {
     fontSize: 14,
     color: '#ff4d4f',
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  bottomSpacer: {
+    height: 32,
   },
 });
