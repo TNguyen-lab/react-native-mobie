@@ -42,10 +42,11 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: BRAND_COLOR,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 60,
   },
   headerLeft: {
     width: 36,
@@ -57,8 +58,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-    textAlign: 'right',
-    paddingRight: 8,
+    textAlign: 'left',
+    paddingLeft: 8,
   },
   headerRight: {
     width: 36,
