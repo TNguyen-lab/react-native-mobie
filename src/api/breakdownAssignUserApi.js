@@ -53,3 +53,13 @@ export const comfirmBreakdownAssignUserFixed = (payload) => {
 export const getTotalEngineerBreakdownAssignUser = (breakdownUserAssignId) => {
   return patch(`breakdownAssignUser/get-total-engineer-breakdown-assign/` + breakdownUserAssignId);
 };
+export const getLastCheckInCheckOutByBreakdownAssignUser = (payload) => {
+  return get(`breakdownAssignUser/get-last-check-in-check-out`, { ...payload });
+};
+export const getLastCheckInCheckOutByUser = (payload) => {
+  return get(`breakdownAssignUser/get-last-check-in-check-out-by-user`, { ...payload });
+};
+/** Alias matching the spelling used in ComfirmRefuse component. */
+export const comfirmRefuseBreakdownAssignUser = (payload) => {
+  return patch(`breakdownAssignUser/comfirm-refuse-breakdown-assign-user`, { ...payload });
+};
