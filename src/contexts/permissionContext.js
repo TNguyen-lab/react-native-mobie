@@ -37,8 +37,8 @@ export const PermissionProvider = ({ children }) => {
       storage.setBranchChange(_branchChange);
       setBranchChange(_branchChange);
     }
-    const branchIds = JSON.stringify(_branchs.map((_b) => _b.id));
-    await AsyncStorage.setItem(STORAGE_KEY.BRANCHS, branchIds);
+    const branchIds = _branchs.map((_b) => _b.id);
+    await AsyncStorage.setItem(STORAGE_KEY.BRANCHS, JSON.stringify(branchIds));
     storage.setBranchs(branchIds);
     setBranchs(_branchs);
   };

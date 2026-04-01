@@ -27,6 +27,7 @@ export default function RootLayout() {
             <Stack.Screen name="more/settings" options={{ title: 'Cài đặt', headerShown: false }} />
             <Stack.Screen name="more/contact" options={{ title: 'Liên hệ', headerShown: false }} />
             <Stack.Screen name="breakdown/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="breakdown/fixed" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>

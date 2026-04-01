@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useSegments } from "expo-router";
 import { STORAGE_KEY } from "../utils/constant";
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     } catch (_) {}
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       const deviceToken = await AsyncStorage.getItem(STORAGE_KEY.DEVICE_TOKEN);
       if (deviceToken) {
@@ -92,7 +92,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     router.replace("/login");
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   // Load persisted auth on startup
   useEffect(() => {

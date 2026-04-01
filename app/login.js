@@ -45,7 +45,7 @@ export default function LoginScreen() {
           res?.message || "Tên đăng nhập hoặc mật khẩu không đúng!",
         );
       }
-    } catch (err) {
+    } catch (_err) {
       Alert.alert("Lỗi", "Có lỗi xảy ra, vui lòng thử lại sau!");
     } finally {
       setLoading(false);
