@@ -91,13 +91,14 @@ export default function TabLayout() {
           tabBarStyle: {
             backgroundColor: TAB_BAR_BG,
             borderTopWidth: 0,
-            height: 60,
+            height: 72,
+            paddingBottom: 8,
           },
           tabBarActiveTintColor: ACTIVE_COLOR,
           tabBarInactiveTintColor: INACTIVE_COLOR,
           tabBarLabelStyle: {
             fontSize: 11,
-            marginBottom: 4,
+            marginBottom: 8,
           },
         }}>
         <Tabs.Screen
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
   moreTabLabel: {
     fontSize: 11,
     color: INACTIVE_COLOR,
-    marginBottom: 4,
+    marginBottom: 8,
   },
 
   // Modal overlay
