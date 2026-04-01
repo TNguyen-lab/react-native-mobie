@@ -42,8 +42,8 @@ export const setBranchChange = (bc) => {
   _branchChange = bc;
 };
 export const getBranchs = () => (_branchs ? JSON.parse(_branchs) : null);
-export const setBranchs = (bs) => {
-  _branchs = JSON.stringify(bs);
+export const setBranchs = (bsArray) => {
+  _branchs = Array.isArray(bsArray) ? JSON.stringify(bsArray) : bsArray;
 };
 
 // ---------- Generic helpers ----------
