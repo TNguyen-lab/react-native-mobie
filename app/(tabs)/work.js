@@ -84,6 +84,7 @@ export default function WorkScreen() {
           sortBy: 'createdAt',
           sortOrder,
           schedulePreventiveTaskAssignUserStatuses: STATUS_MAP[statusFilter] ?? [],
+          ticketSchedulePreventiveTaskAssignUserStatus: statusFilter,
         };
         if (statusFilter === 'overdue') {
           payload.isOverdue = true;
