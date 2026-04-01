@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { STORAGE_KEY } from "../utils/constant";
-import { useNavigate } from "react-router-dom";
 import { schedulePreventiveStatus } from "../utils/schedulePreventive.constant";
 const SchedulePreventiveTaskContext = createContext({});
 
