@@ -1,90 +1,133 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter, useSegments } from "expo-router";
 import { STORAGE_KEY } from "../utils/constant";
 import * as _unitOfWork from "../api";
-import { useNavigate } from "react-router-dom";
+import * as storage from "../api/storage";
+import { setUnauthorizedHandler } from "../api/authCallback";
+
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState();
-  const [user, setUser] = useState();
-  const navigator = useNavigate();
-  const login = async (dataLogin) => {
-    const redirectUrl = localStorage.getItem(STORAGE_KEY.REDIRECTAFTERLOGIN);
-    if (redirectUrl) {
-      localStorage.removeItem(STORAGE_KEY.REDIRECTAFTERLOGIN);
-      navigator(redirectUrl);
-    } else {
-      navigator("/"); // fallback
+  // undefined = still loading, null = not authenticated, string = token
+  const [token, setToken] = useState(undefined);
+  const [user, setUser] = useState(undefined);
+  const router = useRouter();
+  const segments = useSegments();
+
+  // Auth guard: redirect to login when not authenticated
+  useEffect(() => {
+    if (token === undefined) return; // still loading
+    const onLoginScreen = segments[0] === "login";
+    if (!token && !onLoginScreen) {
+      router.replace("/login");
+    } else if (token && onLoginScreen) {
+      router.replace("/");
     }
-    localStorage.setItem(
-      STORAGE_KEY.USER,
-      JSON.stringify({ ...dataLogin.user }),
-    );
-    localStorage.setItem(
-      STORAGE_KEY.COMPANY,
-      JSON.stringify({ ...dataLogin.user.company }),
-    );
-    localStorage.setItem(STORAGE_KEY.TOKEN, dataLogin.tokens.access.token);
-    localStorage.setItem(
-      STORAGE_KEY.REFRESH_TOKEN,
-      dataLogin.tokens.refresh.token,
-    );
-    await fetchUserPermission();
-    // _unitOfWork.user.updateLastLoginTime();
-    // save deviceToken
-    var deviceToken = localStorage.getItem(STORAGE_KEY.DEVICE_TOKEN);
-    if (deviceToken) {
-      let res = await _unitOfWork.user.saveDeviceMobile({
-        deviceMobile: {
-          deviceToken: deviceToken,
-          user: dataLogin.user?.id,
-        },
-      });
-    }
-    window.location.reload();
-  };
+  }, [token, segments]);
+
   const fetchUserPermission = async () => {
-    let res = await _unitOfWork.user.getPermissisonByUsers();
-    if (res && res.code === 1) {
-      localStorage.setItem(STORAGE_KEY.PERMISSION, JSON.stringify(res.data));
-    }
-  };
-  const logout = async () => {
-    var deviceToken = localStorage.getItem(STORAGE_KEY.DEVICE_TOKEN);
-    if (deviceToken) {
-      let res = await _unitOfWork.logoutMobile({
-        deviceToken: deviceToken,
-      });
-    }
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEY.BRANCHS);
-    localStorage.removeItem(STORAGE_KEY.BRANCH_CHANGE);
-    localStorage.removeItem(STORAGE_KEY.COMPANY_SETTING);
-    localStorage.removeItem(STORAGE_KEY.FOOTER_ACTIVE);
-    localStorage.removeItem(STORAGE_KEY.PERMISSION);
-    localStorage.removeItem(STORAGE_KEY.SUSBSCRIPTION_ID);
-    localStorage.removeItem(STORAGE_KEY.TOKEN);
-    localStorage.removeItem(STORAGE_KEY.USER);
-    // localStorage.removeItem(STORAGE_KEY.REDIRECTAFTERLOGIN);
-    setToken(null);
-    navigator("/login");
+    try {
+      const res = await _unitOfWork.user.getPermissisonByUsers();
+      if (res && res.code === 1) {
+        await AsyncStorage.setItem(STORAGE_KEY.PERMISSION, JSON.stringify(res.data));
+      }
+    } catch (_) {}
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem(STORAGE_KEY.TOKEN);
-    const user = localStorage.getItem(STORAGE_KEY.USER);
+  const login = async (dataLogin) => {
+    const userData = { ...dataLogin.user };
+    const accessToken = dataLogin.tokens.access.token;
+    const refreshToken = dataLogin.tokens.refresh.token;
+    const company = { ...dataLogin.user.company };
+
+    await AsyncStorage.multiSet([
+      [STORAGE_KEY.USER, JSON.stringify(userData)],
+      [STORAGE_KEY.COMPANY, JSON.stringify(company)],
+      [STORAGE_KEY.TOKEN, accessToken],
+      [STORAGE_KEY.REFRESH_TOKEN, refreshToken],
+    ]);
+
+    storage.setToken(accessToken);
+    setToken(accessToken);
+    setUser(userData);
+
+    await fetchUserPermission();
+
+    // Save device token if available
     try {
-      const userObj = JSON.parse(user);
-      // if (token) {
-      //   _unitOfWork.user.updateLastLoginTime();
-      // }
-      setUser(userObj);
-    } catch (error) {
-      setUser(null);
-      localStorage.removeItem(STORAGE_KEY.USER);
-    }
-    setToken(token || null);
+      const deviceToken = await AsyncStorage.getItem(STORAGE_KEY.DEVICE_TOKEN);
+      if (deviceToken) {
+        await _unitOfWork.user.saveDeviceMobile({
+          deviceMobile: {
+            deviceToken,
+            user: dataLogin.user?.id,
+          },
+        });
+      }
+    } catch (_) {}
+  };
+
+  const logout = async () => {
+    try {
+      const deviceToken = await AsyncStorage.getItem(STORAGE_KEY.DEVICE_TOKEN);
+      if (deviceToken) {
+        await _unitOfWork.logoutMobile({ deviceToken });
+      }
+    } catch (_) {}
+
+    await AsyncStorage.multiRemove([
+      STORAGE_KEY.BRANCHS,
+      STORAGE_KEY.BRANCH_CHANGE,
+      STORAGE_KEY.COMPANY_SETTING,
+      STORAGE_KEY.FOOTER_ACTIVE,
+      STORAGE_KEY.PERMISSION,
+      STORAGE_KEY.TOKEN,
+      STORAGE_KEY.REFRESH_TOKEN,
+      STORAGE_KEY.USER,
+      STORAGE_KEY.COMPANY,
+    ]);
+
+    storage.setToken(null);
+    setUser(null);
+    setToken(null);
+    router.replace("/login");
+  };
+
+  // Load persisted auth on startup
+  useEffect(() => {
+    const loadAuth = async () => {
+      try {
+        await storage.initStorage();
+        const [[, tokenStr], [, userStr]] = await AsyncStorage.multiGet([
+          STORAGE_KEY.TOKEN,
+          STORAGE_KEY.USER,
+        ]);
+        const t = tokenStr || null;
+        let u = null;
+        if (userStr) {
+          try {
+            u = JSON.parse(userStr);
+          } catch (_) {}
+        }
+        storage.setToken(t);
+        setToken(t);
+        setUser(u);
+      } catch (_) {
+        storage.setToken(null);
+        setToken(null);
+        setUser(null);
+      }
+    };
+    loadAuth();
   }, []);
+
+  // Register 401 handler so API layer can trigger logout
+  useEffect(() => {
+    setUnauthorizedHandler(logout);
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -102,6 +145,6 @@ export const AuthProvider = ({ children }) => {
 };
 
 export default function useAuth() {
-  const context = useContext(AuthContext);
-  return context;
+  return useContext(AuthContext);
 }
+

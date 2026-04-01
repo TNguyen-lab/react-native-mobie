@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEY } from "../utils/constant";
 import * as _unitOfWork from "../api";
-import { useNavigate } from "react-router-dom";
+import * as storage from "../api/storage";
+
 const PermissionContext = createContext({});
 
 export const PermissionProvider = ({ children }) => {
@@ -10,35 +12,42 @@ export const PermissionProvider = ({ children }) => {
   const [permissions, setPermissions] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem(STORAGE_KEY.TOKEN);
+    const token = storage.getToken();
     if (token) {
       fetchUserPermission();
     }
   }, []);
+
   const fetchUserPermission = async () => {
-    let res = await _unitOfWork.user.getPermissisonByUsers();
-    if (res && res.code === 1) {
-      permissionByUser(res.data);
-    }
+    try {
+      const res = await _unitOfWork.user.getPermissisonByUsers();
+      if (res && res.code === 1) {
+        permissionByUser(res.data);
+      }
+    } catch (_) {}
   };
-  const updateBranchs = (_branchs) => {
-    const _branchChange = localStorage.getItem(STORAGE_KEY.BRANCH_CHANGE);
+
+  const updateBranchs = async (_branchs) => {
+    const _branchChange = await AsyncStorage.getItem(STORAGE_KEY.BRANCH_CHANGE);
     if (!_branchChange) {
-      localStorage.setItem(STORAGE_KEY.BRANCH_CHANGE, "all");
+      await AsyncStorage.setItem(STORAGE_KEY.BRANCH_CHANGE, "all");
+      storage.setBranchChange("all");
       setBranchChange("all");
     } else {
+      storage.setBranchChange(_branchChange);
       setBranchChange(_branchChange);
     }
-    localStorage.setItem(
-      STORAGE_KEY.BRANCHS,
-      JSON.stringify(_branchs.map((_b) => _b.id))
-    );
+    const branchIds = JSON.stringify(_branchs.map((_b) => _b.id));
+    await AsyncStorage.setItem(STORAGE_KEY.BRANCHS, branchIds);
+    storage.setBranchs(branchIds);
     setBranchs(_branchs);
   };
-  const permissionByUser = (_permissions) => {
+
+  const permissionByUser = async (_permissions) => {
     setPermissions(_permissions);
-    localStorage.setItem(STORAGE_KEY.PERMISSION, JSON.stringify(_permissions));
+    await AsyncStorage.setItem(STORAGE_KEY.PERMISSION, JSON.stringify(_permissions));
   };
+
   return (
     <PermissionContext.Provider
       value={{
@@ -47,7 +56,7 @@ export const PermissionProvider = ({ children }) => {
         branchChange,
         permissions,
         permissionByUser,
-        fetchUserPermission
+        fetchUserPermission,
       }}
     >
       {children}
@@ -56,6 +65,6 @@ export const PermissionProvider = ({ children }) => {
 };
 
 export default function usePermission() {
-  const context = useContext(PermissionContext);
-  return context;
+  return useContext(PermissionContext);
 }
+
